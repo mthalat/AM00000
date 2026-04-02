@@ -1,0 +1,259 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Smart Follower Exchange Bot API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: stats
+    description: Bot statistics
+  - name: users
+    description: User operations
+  - name: leaderboard
+    description: Leaderboard operations
+  - name: tasks
+    description: Task operations
+  - name: telegram
+    description: Telegram webhook
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get overall bot statistics
+      responses:
+        "200":
+          description: Bot statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotStats"
+
+  /leaderboard:
+    get:
+      operationId: getLeaderboard
+      tags: [leaderboard]
+      summary: Get top users by points
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+
+  /users/{telegramId}:
+    get:
+      operationId: getUser
+      tags: [users]
+      summary: Get user by Telegram ID
+      parameters:
+        - name: telegramId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: User found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotUser"
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /tasks:
+    get:
+      operationId: getTasks
+      tags: [tasks]
+      summary: Get active tasks
+      responses:
+        "200":
+          description: List of active tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+
+  /telegram/webhook:
+    post:
+      operationId: telegramWebhook
+      tags: [telegram]
+      summary: Telegram webhook handler
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
+                required:
+                  - ok
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    BotStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        unlockedUsers:
+          type: integer
+        totalPointsDistributed:
+          type: integer
+        tasksCompleted:
+          type: integer
+        todayNewUsers:
+          type: integer
+      required:
+        - totalUsers
+        - unlockedUsers
+        - totalPointsDistributed
+        - tasksCompleted
+        - todayNewUsers
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        rank:
+          type: integer
+        telegramId:
+          type: string
+        username:
+          type: string
+        firstName:
+          type: string
+        points:
+          type: integer
+        vipLevel:
+          type: integer
+        shareCount:
+          type: integer
+      required:
+        - rank
+        - telegramId
+        - username
+        - firstName
+        - points
+        - vipLevel
+        - shareCount
+
+    BotUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        telegramId:
+          type: string
+        username:
+          type: string
+        firstName:
+          type: string
+        points:
+          type: integer
+        vipLevel:
+          type: integer
+        referralCode:
+          type: string
+        shareCount:
+          type: integer
+        isUnlocked:
+          type: boolean
+        tasksCompleted:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - telegramId
+        - username
+        - firstName
+        - points
+        - vipLevel
+        - referralCode
+        - shareCount
+        - isUnlocked
+        - tasksCompleted
+        - createdAt
+
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        platform:
+          type: string
+        taskType:
+          type: string
+        targetAccount:
+          type: string
+        pointsReward:
+          type: integer
+        isActive:
+          type: boolean
+      required:
+        - id
+        - platform
+        - taskType
+        - targetAccount
+        - pointsReward
+        - isActive
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error

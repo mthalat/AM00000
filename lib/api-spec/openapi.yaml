@@ -1,30 +1,24 @@
 openapi: 3.1.0
 info:
+  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: Smart Follower Exchange Bot API
+  description: API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
-  - name: stats
-    description: Bot statistics
-  - name: users
-    description: User operations
-  - name: leaderboard
-    description: Leaderboard operations
-  - name: tasks
-    description: Task operations
-  - name: telegram
-    description: Telegram webhook
+  - name: news
+    description: News operations
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
+      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -33,104 +27,79 @@ paths:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
 
-  /stats:
+  /news:
     get:
-      operationId: getStats
-      tags: [stats]
-      summary: Get overall bot statistics
+      operationId: getNews
+      tags: [news]
+      summary: Get news articles
+      description: Fetch paginated news articles, optionally filtered by category or search query
+      parameters:
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [all, world, politics, business, sports, technology, science, health, entertainment]
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search query string
+        - name: page
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 20
       responses:
         "200":
-          description: Bot statistics
+          description: List of news articles
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BotStats"
+                $ref: "#/components/schemas/NewsResponse"
 
-  /leaderboard:
+  /news/top:
     get:
-      operationId: getLeaderboard
-      tags: [leaderboard]
-      summary: Get top users by points
+      operationId: getTopNews
+      tags: [news]
+      summary: Get top headlines
+      description: Fetch top headlines across all categories for display in hero/featured section
       parameters:
         - name: limit
           in: query
+          required: false
           schema:
             type: integer
-            default: 10
+            default: 5
       responses:
         "200":
-          description: Leaderboard entries
+          description: List of top news articles
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/LeaderboardEntry"
+                $ref: "#/components/schemas/TopNewsResponse"
 
-  /users/{telegramId}:
+  /news/categories:
     get:
-      operationId: getUser
-      tags: [users]
-      summary: Get user by Telegram ID
-      parameters:
-        - name: telegramId
-          in: path
-          required: true
-          schema:
-            type: string
+      operationId: getNewsCategories
+      tags: [news]
+      summary: Get news category stats
+      description: Returns categories with article counts
       responses:
         "200":
-          description: User found
+          description: Category statistics
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/BotUser"
-        "404":
-          description: User not found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/ErrorResponse"
-
-  /tasks:
-    get:
-      operationId: getTasks
-      tags: [tasks]
-      summary: Get active tasks
-      responses:
-        "200":
-          description: List of active tasks
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/Task"
-
-  /telegram/webhook:
-    post:
-      operationId: telegramWebhook
-      tags: [telegram]
-      summary: Telegram webhook handler
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              additionalProperties: true
-      responses:
-        "200":
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  ok:
-                    type: boolean
-                required:
-                  - ok
+                $ref: "#/components/schemas/CategoriesResponse"
 
 components:
   schemas:
@@ -142,118 +111,96 @@ components:
       required:
         - status
 
-    BotStats:
-      type: object
-      properties:
-        totalUsers:
-          type: integer
-        unlockedUsers:
-          type: integer
-        totalPointsDistributed:
-          type: integer
-        tasksCompleted:
-          type: integer
-        todayNewUsers:
-          type: integer
-      required:
-        - totalUsers
-        - unlockedUsers
-        - totalPointsDistributed
-        - tasksCompleted
-        - todayNewUsers
-
-    LeaderboardEntry:
-      type: object
-      properties:
-        rank:
-          type: integer
-        telegramId:
-          type: string
-        username:
-          type: string
-        firstName:
-          type: string
-        points:
-          type: integer
-        vipLevel:
-          type: integer
-        shareCount:
-          type: integer
-      required:
-        - rank
-        - telegramId
-        - username
-        - firstName
-        - points
-        - vipLevel
-        - shareCount
-
-    BotUser:
+    NewsArticle:
       type: object
       properties:
         id:
-          type: integer
-        telegramId:
           type: string
-        username:
+        title:
           type: string
-        firstName:
+        summary:
           type: string
-        points:
-          type: integer
-        vipLevel:
-          type: integer
-        referralCode:
+        url:
           type: string
-        shareCount:
-          type: integer
-        isUnlocked:
-          type: boolean
-        tasksCompleted:
-          type: integer
-        createdAt:
+        imageUrl:
           type: string
-          format: date-time
+          nullable: true
+        source:
+          type: string
+        sourceUrl:
+          type: string
+        category:
+          type: string
+        publishedAt:
+          type: string
+        author:
+          type: string
+          nullable: true
       required:
         - id
-        - telegramId
-        - username
-        - firstName
-        - points
-        - vipLevel
-        - referralCode
-        - shareCount
-        - isUnlocked
-        - tasksCompleted
-        - createdAt
+        - title
+        - summary
+        - url
+        - source
+        - sourceUrl
+        - category
+        - publishedAt
 
-    Task:
+    NewsResponse:
       type: object
       properties:
-        id:
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/NewsArticle"
+        total:
           type: integer
-        platform:
-          type: string
-        taskType:
-          type: string
-        targetAccount:
-          type: string
-        pointsReward:
+        page:
           type: integer
-        isActive:
+        limit:
+          type: integer
+        hasMore:
           type: boolean
       required:
-        - id
-        - platform
-        - taskType
-        - targetAccount
-        - pointsReward
-        - isActive
+        - articles
+        - total
+        - page
+        - limit
+        - hasMore
 
-    ErrorResponse:
+    TopNewsResponse:
       type: object
       properties:
-        error:
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/NewsArticle"
+      required:
+        - articles
+
+    CategoryStat:
+      type: object
+      properties:
+        category:
+          type: string
+        label:
+          type: string
+        count:
+          type: integer
+        icon:
           type: string
       required:
-        - error
+        - category
+        - label
+        - count
+        - icon
+
+    CategoriesResponse:
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: "#/components/schemas/CategoryStat"
+      required:
+        - categories

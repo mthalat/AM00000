@@ -2,7 +2,7 @@
 
 ## Overview
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+Full-stack pnpm workspace monorepo. Contains a news aggregator web application "أخبار العالم" (NewsHub) that automatically fetches news from trusted RSS feeds worldwide.
 
 ## Stack
 
@@ -11,84 +11,59 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **Package manager**: pnpm
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
+- **Database**: PostgreSQL + Drizzle ORM (provisioned but not yet used for news — RSS feeds used instead)
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
-- **Telegram Bot**: Telegraf
+- **Frontend**: React + Vite + Tailwind CSS v4
 
-## Structure
+## Artifacts
 
-```text
-artifacts-monorepo/
-├── artifacts/              # Deployable applications
-│   ├── api-server/         # Express API server + Telegram bot
-│   └── follower-bot/       # React landing page (Arabic RTL)
-├── lib/                    # Shared libraries
-│   ├── api-spec/           # OpenAPI spec + Orval codegen config
-│   ├── api-client-react/   # Generated React Query hooks
-│   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
-├── scripts/                # Utility scripts
-└── ...
-```
+### `news-hub` (React + Vite) — Preview path: `/`
+The main news aggregation website. RTL Arabic interface with:
+- Live news from 20+ RSS feeds (BBC, Reuters, Al Jazeera, CNN, TechCrunch, ESPN, etc.)
+- Categories: World, Politics, Business, Sports, Technology, Science, Health, Entertainment
+- Hero section with top headlines
+- Category filter sidebar with article counts
+- Debounced search across all articles
+- Dark/light mode toggle
+- Auto-refresh every 5 minutes
+- Responsive, mobile-friendly layout
 
-## Bot System
+### `api-server` (Express API) — Preview path: `/api`
+Shared backend with RSS feed aggregation:
+- `GET /api/news` — paginated articles with category/search filters
+- `GET /api/news/top` — top headlines with images for hero section
+- `GET /api/news/categories` — category stats (label, count, icon)
+- In-memory cache with 5-minute TTL
+- Fetches from 20+ trusted RSS sources in parallel
 
-### Telegram Bot Features
-- **Lock mechanic**: Must invite 5 friends to unlock the bot
-- **Points system**: Earn points from tasks, referrals, and daily wheel
-- **Tasks**: Follow/like/comment tasks on Instagram, Telegram, Twitter, TikTok, YouTube
-- **Daily Lucky Wheel**: Random 5–100 points once per day
-- **VIP tiers**: Level 1 (500pts), Level 2 (1000pts)
-- **Referral**: 20 pts per referral, 50 pts welcome bonus on unlock
-- **Leaderboard**: Top users by points
+## Key Commands
 
-### Database Tables
-- `bot_users` — users with points, VIP level, referral tracking, unlock status
-- `tasks` — social media tasks with platform/type/points
-- `task_completions` — completed tasks per user
-- `point_transactions` — full audit log of all point changes
+- `pnpm run typecheck` — full typecheck across all packages
+- `pnpm run build` — typecheck + build all packages
+- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
+- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
+- `pnpm --filter @workspace/api-server run dev` — run API server locally
+- `pnpm --filter @workspace/news-hub run dev` — run frontend locally
 
-### API Endpoints
-- `GET /api/stats` — overall bot statistics for the landing page
-- `GET /api/leaderboard` — top users by points
-- `GET /api/users/:telegramId` — user profile
-- `GET /api/tasks` — active tasks
-- `POST /api/telegram/webhook` — Telegram bot webhook
+## RSS Sources
 
-### Webhook
-Registered at: `https://<REPLIT_DOMAIN>/api/telegram/webhook`
+The API server fetches from these categories:
+- **World**: BBC World, Reuters, Al Jazeera, Deutsche Welle
+- **Politics**: BBC Politics, NPR Politics
+- **Business**: BBC Business, WSJ, NY Times Business
+- **Sports**: BBC Sport, ESPN
+- **Technology**: TechCrunch, The Verge, Ars Technica, BBC Tech
+- **Science**: BBC Science, NPR Science, NASA
+- **Health**: BBC Health, NPR Health
+- **Entertainment**: BBC Entertainment, NPR Arts
 
-### Environment Secrets
-- `TELEGRAM_BOT_TOKEN` — required for the bot to work
-- `DATABASE_URL` — auto-set by Replit
+## Vercel Deployment Notes
 
-## Frontend (follower-bot)
+To deploy on Vercel:
+1. Build the frontend: `pnpm --filter @workspace/news-hub run build`
+2. Output directory: `artifacts/news-hub/dist/public`
+3. The backend (Express) needs a separate deployment or can be converted to Vercel serverless functions in an `api/` folder
 
-Arabic RTL landing page at `/` showing:
-- Live stats (auto-refresh every 30s)
-- Bot features and how it works
-- 5-friend unlock mechanic explanation
-- Active tasks list
-- Leaderboard
-
-## Packages
-
-### `artifacts/api-server` (`@workspace/api-server`)
-Express 5 API server + Telegram bot handlers.
-
-### `artifacts/follower-bot` (`@workspace/follower-bot`)
-React + Vite Arabic landing page.
-
-### `lib/db` (`@workspace/db`)
-Database layer using Drizzle ORM with PostgreSQL.
-
-### `lib/api-spec` (`@workspace/api-spec`)
-OpenAPI spec + Orval codegen config.
-
-### `lib/api-zod` (`@workspace/api-zod`)
-Generated Zod schemas.
-
-### `lib/api-client-react` (`@workspace/api-client-react`)
-Generated React Query hooks.
+See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

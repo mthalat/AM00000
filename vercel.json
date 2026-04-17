@@ -1,0 +1,6 @@
+{
+  "buildCommand": "pnpm install && pnpm --filter @workspace/news-hub run build",
+  "outputDirectory": "artifacts/news-hub/dist/public",
+  "installCommand": "pnpm install",
+  "framework": null
+}

@@ -7,7 +7,7 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24 locally on Replit; Vercel is pinned to Node 22.x via root `package.json`
+- **Node.js version**: 24 locally on Replit and Vercel via root `package.json`
 - **Package manager**: pnpm 10.26.1
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
@@ -31,6 +31,9 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - Vercel install command: `corepack enable && pnpm install --frozen-lockfile`.
 - Vercel build command: `pnpm --filter @workspace/news-hub run build`.
 - Vercel output directory: `artifacts/news-hub/dist/public`.
-- Root `package.json` pins `packageManager` and Node engine to avoid pnpm registry fetch failures during Vercel installs.
+- Root `package.json` pins `packageManager`, `type: module`, and Node engine to keep Vercel installs and JavaScript serverless functions consistent.
+- Vercel rewrites send `/api/*` to serverless functions and all other routes to the built frontend `index.html`.
+- The Vercel API helper is `api/_news-logic.mjs`, and endpoint files under `api/news/*.js` are JavaScript functions to avoid Vercel TypeScript helper transpilation issues.
+- Minimal Vercel export archives should include only `api`, `artifacts/news-hub`, `lib/api-client-react`, `lib/api-zod`, `lib/api-spec`, and root config files to avoid deploying the Replit API server artifact by mistake.
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

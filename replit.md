@@ -2,41 +2,19 @@
 
 ## Overview
 
-Full-stack pnpm workspace monorepo. Contains a news aggregator web application "أخبار العالم" (NewsHub) that automatically fetches news from trusted RSS feeds worldwide.
+pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
 
 ## Stack
 
 - **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
+- **Node.js version**: 24 locally on Replit; Vercel is pinned to Node 22.x via root `package.json`
+- **Package manager**: pnpm 10.26.1
 - **TypeScript version**: 5.9
 - **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM (provisioned but not yet used for news — RSS feeds used instead)
+- **Database**: PostgreSQL + Drizzle ORM
 - **Validation**: Zod (`zod/v4`), `drizzle-zod`
 - **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
-- **Frontend**: React + Vite + Tailwind CSS v4
-
-## Artifacts
-
-### `news-hub` (React + Vite) — Preview path: `/`
-The main news aggregation website. RTL Arabic interface with:
-- Live news from 20+ RSS feeds (BBC, Reuters, Al Jazeera, CNN, TechCrunch, ESPN, etc.)
-- Categories: World, Politics, Business, Sports, Technology, Science, Health, Entertainment
-- Hero section with top headlines
-- Category filter sidebar with article counts
-- Debounced search across all articles
-- Dark/light mode toggle
-- Auto-refresh every 5 minutes
-- Responsive, mobile-friendly layout
-
-### `api-server` (Express API) — Preview path: `/api`
-Shared backend with RSS feed aggregation:
-- `GET /api/news` — paginated articles with category/search filters
-- `GET /api/news/top` — top headlines with images for hero section
-- `GET /api/news/categories` — category stats (label, count, icon)
-- In-memory cache with 5-minute TTL
-- Fetches from 20+ trusted RSS sources in parallel
+- **Build**: esbuild (CJS bundle) and Vite for the news hub frontend
 
 ## Key Commands
 
@@ -45,25 +23,14 @@ Shared backend with RSS feed aggregation:
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
-- `pnpm --filter @workspace/news-hub run dev` — run frontend locally
+- `pnpm --filter @workspace/news-hub run build` — build the news hub frontend for Vercel
 
-## RSS Sources
+## Deployment Notes
 
-The API server fetches from these categories:
-- **World**: BBC World, Reuters, Al Jazeera, Deutsche Welle
-- **Politics**: BBC Politics, NPR Politics
-- **Business**: BBC Business, WSJ, NY Times Business
-- **Sports**: BBC Sport, ESPN
-- **Technology**: TechCrunch, The Verge, Ars Technica, BBC Tech
-- **Science**: BBC Science, NPR Science, NASA
-- **Health**: BBC Health, NPR Health
-- **Entertainment**: BBC Entertainment, NPR Arts
-
-## Vercel Deployment Notes
-
-To deploy on Vercel:
-1. Build the frontend: `pnpm --filter @workspace/news-hub run build`
-2. Output directory: `artifacts/news-hub/dist/public`
-3. The backend (Express) needs a separate deployment or can be converted to Vercel serverless functions in an `api/` folder
+- Vercel deployment is configured in `vercel.json`.
+- Vercel install command: `corepack enable && pnpm install --frozen-lockfile`.
+- Vercel build command: `pnpm --filter @workspace/news-hub run build`.
+- Vercel output directory: `artifacts/news-hub/dist/public`.
+- Root `package.json` pins `packageManager` and Node engine to avoid pnpm registry fetch failures during Vercel installs.
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.

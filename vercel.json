@@ -1,6 +1,6 @@
 {
-  "buildCommand": "pnpm install && pnpm --filter @workspace/news-hub run build",
+  "buildCommand": "pnpm --filter @workspace/news-hub run build",
   "outputDirectory": "artifacts/news-hub/dist/public",
-  "installCommand": "pnpm install",
+  "installCommand": "corepack enable && pnpm install --frozen-lockfile",
   "framework": null
 }
